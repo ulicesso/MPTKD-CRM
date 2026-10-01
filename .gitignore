@@ -1,0 +1,16 @@
+# Real student and billing data never goes in git (this repo is meant to hold code only).
+data/
+*.xlsx
+*.xls
+*.csv
+!tests/fixtures/*.csv
+
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.DS_Store
+screenshots/
+coverage/
+supabase/seed.sql

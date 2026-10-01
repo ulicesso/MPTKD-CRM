@@ -1,0 +1,695 @@
+<title>MPTKD Tuition Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: an owner's morning read, top to bottom: headline numbers, the deposit calendar, the months ahead, then the member lists. */
+:root{
+  --bg:#f3f5f9; --surface:#ffffff; --surface-2:#f7f9fc;
+  --ink:#0f1b2d; --ink-2:#465267; --muted:#76819a; --line:#dde3ec; --line-strong:#c3ccd9;
+  --accent:#1f3c8f; --accent-ink:#ffffff; --belt:#f2b91f;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --heat-0:#f7f9fc; --heat-1:#e3eefc; --heat-2:#cde2fb; --heat-3:#9ec5f4; --heat-4:#5598e7; --heat-5:#256abf;
+  --heat-ink:#0f1b2d; --heat-ink-hi:#ffffff;
+  --good:#0a7a0a; --good-bg:#e5f4e5; --warn:#8a5a00; --warn-bg:#fff2d1; --crit:#b52f2f; --crit-bg:#fbe6e6; --info-bg:#e8eef9;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0c1119; --surface:#141b26; --surface-2:#19212e;
+  --ink:#eef2f8; --ink-2:#b4bdcc; --muted:#8a94a6; --line:#263041; --line-strong:#364257;
+  --accent:#8fb0ff; --accent-ink:#0c1119; --belt:#f2c230;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+  --heat-0:#19212e; --heat-1:#17283f; --heat-2:#1b365c; --heat-3:#1f4f8f; --heat-4:#2a6bc0; --heat-5:#4a8fe8;
+  --heat-ink:#eef2f8; --heat-ink-hi:#ffffff;
+  --good:#5fd35f; --good-bg:#15301b; --warn:#f2c230; --warn-bg:#352a0e; --crit:#ff8a8a; --crit-bg:#3a1818; --info-bg:#1b2940;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0c1119; --surface:#141b26; --surface-2:#19212e;
+  --ink:#eef2f8; --ink-2:#b4bdcc; --muted:#8a94a6; --line:#263041; --line-strong:#364257;
+  --accent:#8fb0ff; --accent-ink:#0c1119; --belt:#f2c230;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+  --heat-0:#19212e; --heat-1:#17283f; --heat-2:#1b365c; --heat-3:#1f4f8f; --heat-4:#2a6bc0; --heat-5:#4a8fe8;
+  --heat-ink:#eef2f8; --heat-ink-hi:#ffffff;
+  --good:#5fd35f; --good-bg:#15301b; --warn:#f2c230; --warn-bg:#352a0e; --crit:#ff8a8a; --crit-bg:#3a1818; --info-bg:#1b2940;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:20px;padding-block:24px 56px;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:.01em;margin:0;text-wrap:balance}
+h1{font-size:2.1rem;line-height:1.05;text-transform:uppercase}
+h2{font-size:1.35rem;text-transform:uppercase;letter-spacing:.03em}
+.eyebrow{font-family:var(--display);font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:.8rem;color:var(--muted)}
+.muted{color:var(--muted)} .ink2{color:var(--ink-2)}
+.num{font-variant-numeric:tabular-nums}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 20px}
+.top .meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:2px 10px;font-size:.8rem;font-weight:600;white-space:nowrap}
+.chip.sample{background:var(--warn-bg);color:var(--warn)}
+.chip.live{background:var(--good-bg);color:var(--good)}
+.btn{border:1px solid var(--line-strong);background:var(--surface);border-radius:8px;padding:8px 14px;font-weight:600}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;min-width:0}
+.panel-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 16px;margin-bottom:14px}
+.panel-head p{margin:2px 0 0;color:var(--ink-2);font-size:.92rem;max-width:62ch}
+
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.kpi .v{font-family:var(--display);font-weight:700;font-size:2.3rem;line-height:1}
+.kpi .s{font-size:.86rem;color:var(--ink-2)}
+.kpi .delta{font-size:.82rem;font-weight:600}
+.kpi.lead{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:420px){.kpi .v{font-size:1.9rem}}
+
+.monthbar{display:flex;flex-wrap:wrap;gap:6px}
+.seg{border:1px solid var(--line-strong);background:var(--surface);border-radius:999px;padding:4px 12px;font-size:.86rem;font-weight:600}
+.seg[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+.cal-layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:20px}
+@media (max-width:900px){.cal-layout{grid-template-columns:minmax(0,1fr)}}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cal .dow{font-family:var(--display);font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:.72rem;color:var(--muted);text-align:center;padding-bottom:2px}
+.day{position:relative;border:1px solid transparent;border-radius:7px;min-height:62px;padding:5px 6px;text-align:left;display:flex;flex-direction:column;justify-content:space-between;background:var(--heat-0);color:var(--heat-ink)}
+.day.empty{background:transparent;border:none;cursor:default}
+.day .d{font-size:.75rem;font-weight:600;opacity:.8}
+.day .a{font-family:var(--display);font-weight:700;font-size:1.02rem;line-height:1;font-variant-numeric:tabular-nums}
+.day .n{font-size:.68rem;opacity:.8}
+.day.h1{background:var(--heat-1)} .day.h2{background:var(--heat-2)} .day.h3{background:var(--heat-3)}
+.day.h4{background:var(--heat-4);color:var(--heat-ink-hi)} .day.h5{background:var(--heat-5);color:var(--heat-ink-hi)}
+.day.past{opacity:.5}
+.day.today{border-color:var(--belt);box-shadow:inset 0 0 0 2px var(--belt)}
+.day[aria-pressed="true"]{outline:2px solid var(--ink);outline-offset:1px}
+.day:not(.empty):hover{border-color:var(--ink-2)}
+@media (max-width:520px){.day{min-height:50px;padding:4px}.day .a{font-size:.85rem}.day .n{display:none}}
+.legend-heat{display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--muted);margin-top:10px;flex-wrap:wrap}
+.legend-heat i{display:inline-block;width:18px;height:10px;border-radius:2px}
+.progress{height:12px;border-radius:6px;background:var(--heat-1);overflow:hidden;display:flex}
+.progress span{display:block;height:100%}
+.facts{display:flex;flex-direction:column;gap:12px}
+.fact{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding-bottom:8px;font-size:.92rem}
+.fact b{font-variant-numeric:tabular-nums}
+.daylist{margin-top:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.daylist h3{font-size:1.05rem;margin-bottom:6px}
+.daylist ul{list-style:none;margin:0;padding:0;max-height:220px;overflow:auto}
+.daylist li{display:flex;justify-content:space-between;gap:10px;padding:3px 0;font-size:.88rem;border-bottom:1px dashed var(--line)}
+.daylist li:last-child{border-bottom:none}
+
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+@media (max-width:900px){.two{grid-template-columns:minmax(0,1fr)}}
+
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.84rem;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+.chart{width:100%;height:auto;display:block}
+.chart text{fill:var(--muted);font-family:var(--body);font-size:12px}
+.chart .grid{stroke:var(--line)}
+.chart .base{stroke:var(--line-strong)}
+.chart .lbl{fill:var(--ink);font-weight:600;font-size:12.5px}
+.tip{position:fixed;z-index:20;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--line-strong);border-radius:8px;padding:8px 10px;font-size:.84rem;box-shadow:0 6px 20px rgba(0,0,0,.15);min-width:170px}
+.tip .row{display:flex;justify-content:space-between;gap:12px}
+
+.pbars{display:flex;flex-direction:column;gap:12px}
+.pbar .top{display:flex;justify-content:space-between;gap:8px;font-size:.92rem;margin-bottom:4px}
+.pbar .track{height:14px;background:var(--surface-2);border-radius:4px;overflow:hidden}
+.pbar .fill{height:100%;border-radius:0 4px 4px 0}
+
+.tbl-wrap{overflow:auto;border:1px solid var(--line);border-radius:8px;max-height:460px}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{padding:8px 10px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line)}
+th{position:sticky;top:0;background:var(--surface-2);font-family:var(--display);font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-size:.76rem;color:var(--ink-2);z-index:1}
+td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
+tbody tr:hover td{background:var(--surface-2)}
+.status{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:1px 9px;font-size:.78rem;font-weight:600}
+.status::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.st-crit{background:var(--crit-bg);color:var(--crit)}
+.st-warn{background:var(--warn-bg);color:var(--warn)}
+.st-info{background:var(--info-bg);color:var(--accent)}
+.st-good{background:var(--good-bg);color:var(--good)}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tools input[type=search],.tools select{border:1px solid var(--line-strong);background:var(--surface);border-radius:8px;padding:7px 10px;min-width:0}
+.tools input[type=search]{width:220px;max-width:100%}
+.mini{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:16px}
+.mini div{background:var(--surface-2);border-radius:8px;padding:10px 12px}
+.mini b{display:block;font-family:var(--display);font-size:1.4rem;line-height:1.1}
+.mini span{font-size:.8rem;color:var(--ink-2)}
+@media (max-width:520px){.mini{grid-template-columns:minmax(0,1fr)}}
+
+.state{padding:40px 20px;text-align:center;color:var(--ink-2)}
+.state h2{margin-bottom:8px}
+
+/* Update drawer */
+.drawer{background:var(--surface);border:2px solid var(--accent);border-radius:var(--r);padding:20px}
+.drawer h2{margin-bottom:6px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:14px}
+.map-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px 16px;margin-top:10px}
+.map-grid label{display:flex;flex-direction:column;gap:3px;font-size:.84rem;font-weight:600;color:var(--ink-2)}
+.map-grid select{border:1px solid var(--line-strong);background:var(--surface);border-radius:7px;padding:6px 8px;font-weight:400;color:var(--ink)}
+.map-grid .req::after{content:" *";color:var(--crit)}
+.drop{border:2px dashed var(--line-strong);border-radius:10px;padding:20px;text-align:center;background:var(--surface-2)}
+.drop.over{border-color:var(--accent)}
+.preview-box{margin-top:14px;padding:12px 14px;border-radius:8px;background:var(--surface-2);font-size:.92rem}
+.msg{margin-top:10px;font-size:.9rem;font-weight:600}
+.msg.err{color:var(--crit)} .msg.ok{color:var(--good)}
+code.cols{display:block;white-space:pre-wrap;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:.8rem;margin-top:6px}
+footer.note{font-size:.84rem;color:var(--muted);max-width:80ch}
+@media (prefers-reduced-motion:no-preference){.pbar .fill,.progress span{transition:width .4s ease}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Master P's World Class Tae Kwon Do</div>
+      <h1>Tuition Dashboard</h1>
+      <div class="meta"><span id="asof" class="muted">Loading roster…</span><span id="srcchip"></span></div>
+    </div>
+    <div class="tools">
+      <button class="btn primary" id="openUpdate" hidden>Update from MasterMind</button>
+    </div>
+  </header>
+
+  <section id="updater" class="drawer" hidden aria-labelledby="upd-h">
+    <div class="panel-head" style="margin-bottom:0">
+      <div>
+        <h2 id="upd-h">Load a new MasterMind export</h2>
+        <p>Export your active members from MasterMind as CSV or Excel, drop the file here, and match its columns. Everything is recalculated from the new file.</p>
+      </div>
+      <button class="btn" id="closeUpdate">Close</button>
+    </div>
+    <div class="steps">
+      <div>
+        <div class="eyebrow">Step 1 · Choose the file</div>
+        <div class="drop" id="drop" style="margin-top:8px">
+          <p style="margin:0 0 8px">Drag the export here, or</p>
+          <input type="file" id="file" accept=".csv,.xlsx,.xls,.txt">
+          <p class="muted" id="fileinfo" style="margin:8px 0 0;font-size:.85rem">CSV, XLSX or XLS</p>
+        </div>
+      </div>
+      <div>
+        <div class="eyebrow">If you build the file yourself</div>
+        <p style="margin:8px 0 0;font-size:.9rem" class="ink2">Use one row per student with these column headings. Only name and either Monthly Amount or PIF Amount are required.</p>
+        <code class="cols" id="tplcols">Student Name, Family, Program, Membership, Payment Type, Monthly Amount, Billing Day, Payment Method, Start Date, End Date, PIF Amount, PIF Discount, Paid Date, Family Discount, Status, Billing Resumes</code>
+        <button class="btn" id="copyCols" style="margin-top:6px">Copy headings</button>
+      </div>
+    </div>
+    <div id="mapping" hidden>
+      <div class="eyebrow" style="margin-top:18px">Step 2 · Match the columns</div>
+      <p class="ink2" style="margin:4px 0 0;font-size:.9rem">I matched what I could from the headings. Fix any that are wrong, and leave a field on "Not in file" if the export doesn't have it.</p>
+      <div class="map-grid" id="mapgrid"></div>
+      <div class="preview-box" id="preview"></div>
+      <div class="tools" style="margin-top:12px">
+        <label style="display:flex;gap:8px;align-items:center;font-size:.9rem"><input type="checkbox" id="addcard"> Monthly amounts don't include the 3% card fee yet (add it for card payers)</label>
+      </div>
+      <div class="tools" style="margin-top:12px">
+        <button class="btn primary" id="save">Save to dashboard</button>
+        <span class="msg" id="savemsg"></span>
+      </div>
+    </div>
+  </section>
+
+  <div id="app">
+    <div class="panel state" id="loading"><h2>Loading the roster</h2><p>Pulling the latest member data.</p></div>
+  </div>
+
+  <footer class="note" id="foot">Expected billing counts each monthly member once per month on their billing day, from their start date until their contract end date. Month-to-month members keep paying unless they have an end date. Paused, on-break, awaiting-renewal, paid-ahead and not-paying students are left out until their status changes; on-break students come back on their billing-resumes date. Paid-in-full members are not in the monthly totals.</footer>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/* ===== pure calculations ===== */
+const MS_DAY=86400000;
+function pd(s){ if(!s) return null; const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s); if(!m) return null; return new Date(+m[1],+m[2]-1,+m[3]); }
+function iso(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function dim(y,m){ return new Date(y,m+1,0).getDate(); }
+function daysBetween(a,b){ return Math.round((b-a)/MS_DAY); }
+const STATUS={active:{label:"Active",cls:"st-good"},onbreak:{label:"On break",cls:"st-info"},paused:{label:"Paused",cls:"st-warn"},awaiting:{label:"Awaiting renewal",cls:"st-crit"},paidahead:{label:"Paid ahead",cls:"st-info"},notpaying:{label:"Not paying",cls:"st-warn"}};
+function normStatus(v){ const s=String(v||"").toLowerCase();
+  if(!s.trim()||/active|current|billing/.test(s)) return "active";
+  if(/break|vacation|hold/.test(s)) return "onbreak";
+  if(/pause|freeze|frozen/.test(s)) return "paused";
+  if(/await|renew|pending/.test(s)) return "awaiting";
+  if(/ahead|prepaid|paid up/.test(s)) return "paidahead";
+  if(/not\s*pay|comp|free|staff|scholar|no\s*tuition/.test(s)) return "notpaying";
+  return "active"; }
+function st(m){ return m.status||"active"; }
+function billsOn(m,date){
+  const k=st(m); if(k==="active") return true;
+  if(k==="onbreak"){ const r=pd(m.resume); return !!r&&date>=r; }
+  return false; }
+function isM2M(m){ return !m.end || /month\s*to\s*month|m2m|month-to-month/i.test(m.plan||""); }
+function monthDays(members,y,mo){
+  const n=dim(y,mo), days=Array.from({length:n},()=>({amt:0,list:[]}));
+  for(const m of members){
+    if(m.type!=="monthly"||!m.billDay||!m.amount) continue;
+    const d=Math.min(m.billDay,n), date=new Date(y,mo,d), s=pd(m.start), e=pd(m.end);
+    if(s&&date<s) continue; if(e&&date>e) continue; if(!billsOn(m,date)) continue;
+    days[d-1].amt+=m.amount; days[d-1].list.push(m);
+  }
+  return days;
+}
+function projection(members,today,count){
+  const out=[];
+  for(let i=0;i<count;i++){
+    const y=today.getFullYear()+Math.floor((today.getMonth()+i)/12), mo=(today.getMonth()+i)%12;
+    let term=0,m2m=0,n=0; const ending=[];
+    for(const d of monthDays(members,y,mo)) for(const m of d.list){ n++; if(isM2M(m)) m2m+=m.amount; else term+=m.amount; }
+    for(const m of members){ const e=pd(m.end); if(m.type==="monthly"&&["active","onbreak","paidahead"].includes(st(m))&&e&&e.getFullYear()===y&&e.getMonth()===mo) ending.push(m); }
+    out.push({y,mo,term,m2m,total:term+m2m,payers:n,ending});
+  }
+  return out;
+}
+function pifStatus(m,today){
+  const e=pd(m.end); if(!e) return {key:"active",label:"No end date",cls:"st-info",days:Infinity};
+  const d=daysBetween(today,e);
+  if(d<0) return {key:"expired",label:"Expired",cls:"st-crit",days:d};
+  if(d<=30) return {key:"due",label:"Renew now",cls:"st-crit",days:d};
+  if(d<=60) return {key:"soon",label:"Renew soon",cls:"st-warn",days:d};
+  if(d<=90) return {key:"upcoming",label:"Coming up",cls:"st-info",days:d};
+  return {key:"active",label:"Active",cls:"st-good",days:d};
+}
+function summarize(members,today){
+  const y=today.getFullYear(), mo=today.getMonth();
+  const days=monthDays(members,y,mo);
+  const total=days.reduce((a,d)=>a+d.amt,0);
+  const toCome=days.slice(today.getDate()-1).reduce((a,d)=>a+d.amt,0);
+  const monthly=members.filter(m=>m.type==="monthly"&&st(m)==="active"&&(!m.end||pd(m.end)>=today));
+  const pif=members.filter(m=>m.type==="pif");
+  const pifActive=pif.filter(m=>pifStatus(m,today).days>=0);
+  const mrr=monthly.reduce((a,m)=>a+(m.amount||0),0);
+  return {total,toCome,monthlyCount:monthly.length,mrr,pifCount:pifActive.length,pifValue:pifActive.reduce((a,m)=>a+(m.paid||0),0),
+    pifRenew90:pif.filter(m=>{const s=pifStatus(m,today);return s.days>=0&&s.days<=90;}),
+    pifExpired:pif.filter(m=>pifStatus(m,today).days<0)};
+}
+/* ===== end calculations ===== */
+
+/* ===== import: parsing and column matching ===== */
+const FIELDS=[
+  {k:"name",label:"Student name",req:true,hints:["student name","full name","member name","name","student"]},
+  {k:"first",label:"First name (if split)",hints:["first name","first"]},
+  {k:"last",label:"Last name (if split)",hints:["last name","last","surname"]},
+  {k:"family",label:"Family / household",hints:["family","household","account","parent","guardian"]},
+  {k:"program",label:"Program",hints:["program","class","division","group"]},
+  {k:"plan",label:"Membership / plan",hints:["membership","plan","contract","package","agreement","term"]},
+  {k:"type",label:"Payment type (monthly or PIF)",hints:["payment type","billing type","frequency","pay type","type"]},
+  {k:"amount",label:"Monthly amount",hints:["monthly amount","monthly","recurring","payment amount","tuition","rate","amount"]},
+  {k:"billDay",label:"Billing day or next payment date",hints:["billing day","bill day","draft day","next payment","next bill","next draft","due date","billing date"]},
+  {k:"method",label:"Payment method",hints:["payment method","method","card","ach","bank"]},
+  {k:"start",label:"Start date",hints:["start date","start","begin","enroll","join","signup"]},
+  {k:"end",label:"End / expiration date",hints:["end date","expiration","expire","end","renewal"]},
+  {k:"paid",label:"Paid-in-full amount",hints:["pif amount","paid in full amount","total paid","amount paid","pif total","paid"]},
+  {k:"paidDate",label:"Paid date",hints:["paid date","payment date","date paid"]},
+  {k:"pifDiscount",label:"PIF discount ($)",hints:["pif discount","pif savings","prepay discount","paid in full discount"]},
+  {k:"discount",label:"Family discount ($)",hints:["family discount","sibling discount","discount"]},
+  {k:"status",label:"Status",hints:["status","billing status","member status"]},
+  {k:"resume",label:"Billing resumes",hints:["billing resumes","resumes","resume date","resume"]},
+];
+function norm(s){ return String(s||"").toLowerCase().replace(/[_\-\/]+/g," ").replace(/\s+/g," ").trim(); }
+function autoMap(headers){
+  const nh=headers.map(norm), used=new Set(), map={};
+  for(const f of FIELDS){
+    let best=-1;
+    for(const h of f.hints){ const i=nh.findIndex((x,j)=>!used.has(j)&&x===h); if(i>=0){best=i;break;} }
+    if(best<0) for(const h of f.hints){ const i=nh.findIndex((x,j)=>!used.has(j)&&x.includes(h)); if(i>=0){best=i;break;} }
+    if(best>=0){ map[f.k]=best; used.add(best); } else map[f.k]=-1;
+  }
+  if(map.name>=0&&map.first>=0&&map.last>=0&&norm(headers[map.name]).includes("first")) { map.name=-1; }
+  return map;
+}
+function money(v){ if(v==null||v==="") return 0; const n=parseFloat(String(v).replace(/[^0-9.\-]/g,"")); return isFinite(n)?n:0; }
+function toDate(v){
+  if(v==null||v==="") return "";
+  if(v instanceof Date&&!isNaN(v)) return iso(v);
+  const s=String(v).trim();
+  if(/^\d{5}$/.test(s)){ const d=new Date(Date.UTC(1899,11,30)+(+s)*MS_DAY); return iso(new Date(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())); }
+  let m=/^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s); if(m) return iso(new Date(+m[1],+m[2]-1,+m[3]));
+  m=/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/.exec(s); if(m){ let y=+m[3]; if(y<100) y+=2000; return iso(new Date(y,+m[1]-1,+m[2])); }
+  const d=new Date(s); return isNaN(d)?"":iso(d);
+}
+function toBillDay(v){
+  if(v==null||v==="") return 0;
+  if(typeof v==="number"&&v>=1&&v<=31) return Math.round(v);
+  const s=String(v).trim();
+  const n=parseInt(s.replace(/(st|nd|rd|th)$/i,""),10);
+  if(/^\d{1,2}(\.0+)?(st|nd|rd|th)?$/i.test(s)&&n>=1&&n<=31) return n;
+  const d=toDate(s); return d?pd(d).getDate():0;
+}
+const PIF_RE=/\bpif\b|paid\s*in\s*full|holiday|buy\s*\d+|prepaid|pre-paid/i;
+function buildMembers(rows,map,addCard){
+  const g=(r,k)=>map[k]>=0?r[map[k]]:"";
+  const out=[];
+  for(const r of rows){
+    let name=String(g(r,"name")||"").trim();
+    if(!name) name=[g(r,"first"),g(r,"last")].map(x=>String(x||"").trim()).filter(Boolean).join(" ");
+    if(!name) continue;
+    const plan=String(g(r,"plan")||"").trim(), typeRaw=String(g(r,"type")||"");
+    let amount=money(g(r,"amount")), paid=money(g(r,"paid"));
+    let type = /pif|paid\s*in\s*full|full|prepaid/i.test(typeRaw) ? "pif" : /month|recurr|auto|ach|draft/i.test(typeRaw) ? "monthly" : (PIF_RE.test(plan)||(!amount&&paid>0)) ? "pif" : "monthly";
+    if(type==="pif"&&!paid&&amount>300) { paid=amount; }
+    const mRaw=String(g(r,"method")||"");
+    const isCard=/card|visa|master|amex|discover|credit|cc/i.test(mRaw);
+    const method=isCard?(/no\s*fee|without\s*fee|waiv|absorb|grandfather|old\s*rate|ach\s*rate/i.test(mRaw)?"Card (no fee)":"Card"):(mRaw?"ACH":"");
+    if(type==="monthly"&&addCard&&method==="Card") amount=Math.round(amount*103)/100;
+    out.push({name,family:String(g(r,"family")||"").trim(),program:String(g(r,"program")||"").trim()||"Unassigned",plan:plan||(type==="pif"?"Paid in full":"Monthly"),
+      type,amount:type==="monthly"?amount:0,rate:type==="monthly"?amount:0,discount:money(g(r,"discount")),pifDiscount:type==="pif"?money(g(r,"pifDiscount")):0,method:type==="monthly"?method:"",
+      billDay:type==="monthly"?toBillDay(g(r,"billDay")):0,start:toDate(g(r,"start")),end:toDate(g(r,"end")),paid:type==="pif"?paid:0,paidDate:toDate(g(r,"paidDate"))||(type==="pif"?toDate(g(r,"start")):""),status:normStatus(g(r,"status")),resume:toDate(g(r,"resume"))});
+  }
+  return out;
+}
+function parseCSV(text){
+  const rows=[]; let row=[], f="", q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){f+='"';i++;} else q=false; } else f+=c; }
+    else if(c==='"') q=true;
+    else if(c===","){ row.push(f); f=""; }
+    else if(c==="\n"||c==="\r"){ if(c==="\r"&&text[i+1]==="\n") i++; row.push(f); rows.push(row); row=[]; f=""; }
+    else f+=c;
+  }
+  if(f!==""||row.length){ row.push(f); rows.push(row); }
+  return rows.filter(r=>r.some(x=>String(x).trim()!==""));
+}
+/* ===== end import ===== */
+</script>
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const $f=n=>"$"+Math.round(n).toLocaleString("en-US");
+const $k=n=>n>=1000?"$"+(n/1000).toFixed(n>=10000?0:1).replace(/\.0$/,"")+"k":"$"+Math.round(n);
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const fmtD=s=>{const d=pd(s);return d?MONTHS[d.getMonth()].slice(0,3)+" "+d.getDate()+", "+d.getFullYear():"—";};
+const ord=n=>n+(["th","st","nd","rd"][(n%100>10&&n%100<14)?0:(n%10<4?n%10:0)]||"th");
+const now=new Date(); const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+
+let roster=null, history=[], db=null, canEdit=false;
+const ui={month:0, day:null, pifFilter:"all", q:"", prog:""};
+
+/* tooltip */
+const tip=$("#tip");
+function showTip(html,ev){ tip.innerHTML=html; tip.hidden=false; moveTip(ev); }
+function moveTip(ev){ const w=tip.offsetWidth,h=tip.offsetHeight; let x=ev.clientX+14,y=ev.clientY+14; if(x+w>innerWidth-8) x=ev.clientX-w-14; if(y+h>innerHeight-8) y=ev.clientY-h-14; tip.style.left=Math.max(8,x)+"px"; tip.style.top=Math.max(8,y)+"px"; }
+function hideTip(){ tip.hidden=true; }
+
+function render(){
+  const app=$("#app");
+  if(!roster){ return; }
+  const M=roster.members||[];
+  const S=summarize(M,today);
+  const prev=history.filter(h=>h.asOf<roster.asOf).sort((a,b)=>a.asOf<b.asOf?1:-1)[0];
+  $("#asof").textContent="Data as of "+fmtD(roster.asOf)+" · "+M.length+" members";
+  $("#srcchip").innerHTML=roster.source==="sample"?'<span class="chip sample">Sample data, not real members</span>':'<span class="chip live">From MasterMind export</span>';
+
+  const proj=projection(M,today,6);
+  const curMonth=MONTHS[today.getMonth()];
+  let deltaHtml="";
+  if(prev&&prev.mrr){ const d=S.mrr-prev.mrr; deltaHtml=`<span class="delta" style="color:${d>=0?"var(--good)":"var(--crit)"}">${d>=0?"▲":"▼"} ${$f(Math.abs(d))} monthly vs ${fmtD(prev.asOf)}</span>`; }
+
+  app.innerHTML=`
+  <div style="display:flex;flex-direction:column;gap:20px">
+  <section class="kpis" aria-label="Headline numbers">
+    <div class="kpi lead"><span class="eyebrow">Expected in ${curMonth}</span><span class="v num">${$f(S.total)}</span><span class="s">${S.monthlyCount} monthly payers · avg ${$f(S.mrr/Math.max(1,S.monthlyCount))}/mo</span>${deltaHtml}</div>
+    <div class="kpi"><span class="eyebrow">Still to come this month</span><span class="v num">${$f(S.toCome)}</span><span class="s">From the ${ord(today.getDate())} through the ${ord(dim(today.getFullYear(),today.getMonth()))}</span></div>
+    <div class="kpi"><span class="eyebrow">Paid-in-full members</span><span class="v num">${S.pifCount}</span><span class="s">${$f(S.pifValue)} prepaid, active plans</span></div>
+    <div class="kpi"><span class="eyebrow">PIF renewals, next 90 days</span><span class="v num">${S.pifRenew90.length}</span><span class="s">${$f(S.pifRenew90.reduce((a,m)=>a+m.paid,0))} paid last time${S.pifExpired.length?` · ${S.pifExpired.length} already expired`:""}</span></div>
+  </section>
+
+  <section class="panel" aria-labelledby="cal-h">
+    <div class="panel-head">
+      <div><h2 id="cal-h">When the money lands</h2><p>Each square is a day of the month and the tuition drafted that day. Darker squares bring in more. Tap a day to see who pays.</p></div>
+      <div class="monthbar" role="group" aria-label="Month">${proj.map((p,i)=>`<button class="seg" data-m="${i}" aria-pressed="${i===ui.month}">${MONTHS[p.mo].slice(0,3)}${p.y!==today.getFullYear()?" "+String(p.y).slice(2):""}</button>`).join("")}</div>
+    </div>
+    <div class="cal-layout">
+      <div id="calwrap"></div>
+      <div class="facts" id="calfacts"></div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="proj-h">
+    <div class="panel-head">
+      <div><h2 id="proj-h">The next six months</h2><p>Billing already on the books if nobody renews or cancels. Drops mark contracts ending, which are renewal conversations to have before that month.</p></div>
+      <div class="legend"><span><i class="sw" style="background:var(--s1)"></i>Term contracts</span><span><i class="sw" style="background:var(--s2)"></i>Month to month</span></div>
+    </div>
+    <div id="projchart"></div>
+    <div class="tbl-wrap" style="max-height:none;margin-top:12px"><table><thead><tr><th>Month</th><th class="r">Expected</th><th class="r">Payments</th><th class="r">Contracts ending</th><th class="r">Monthly $ ending</th></tr></thead><tbody>
+      ${proj.map(p=>`<tr><td>${MONTHS[p.mo]} ${p.y}</td><td class="r">${$f(p.total)}</td><td class="r">${p.payers}</td><td class="r">${p.ending.length||"—"}</td><td class="r">${p.ending.length?$f(p.ending.reduce((a,m)=>a+m.amount,0)):"—"}</td></tr>`).join("")}
+    </tbody></table></div>
+  </section>
+
+  <div class="two">
+    <section class="panel" aria-labelledby="prog-h">
+      <div class="panel-head"><div><h2 id="prog-h">Monthly billing by program</h2><p>Active monthly members only.</p></div></div>
+      <div id="progbars" class="pbars"></div>
+      <div class="mini" id="minis"></div>
+    </section>
+    <section class="panel" aria-labelledby="plan-h">
+      <div class="panel-head"><div><h2 id="plan-h">Membership mix</h2><p>Every plan on the roster, including legacy rates.</p></div></div>
+      <div class="tbl-wrap" style="max-height:380px"><table id="plantbl"></table></div>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="pif-h">
+    <div class="panel-head">
+      <div><h2 id="pif-h">Paid-in-full members</h2><p>Sorted by who needs a renewal conversation first.</p></div>
+      <div class="monthbar" role="group" aria-label="Filter paid-in-full members">
+        ${[["all","All"],["renew","Renew within 60 days"],["expired","Expired"]].map(([k,l])=>`<button class="seg" data-pif="${k}" aria-pressed="${ui.pifFilter===k}">${l}</button>`).join("")}
+      </div>
+    </div>
+    <div class="mini" id="pifminis" style="margin:0 0 14px"></div>
+    <div class="tbl-wrap"><table id="piftbl"></table></div>
+  </section>
+
+  <section class="panel" aria-labelledby="hold-h">
+    <div class="panel-head"><div><h2 id="hold-h">Not billing right now</h2><p>Students on the roster who aren't paying monthly tuition at the moment. They're left out of every billing total above.</p></div></div>
+    <div class="mini" id="holdminis" style="margin:0 0 14px"></div>
+    <div class="tbl-wrap"><table id="holdtbl"></table></div>
+  </section>
+
+  <section class="panel" aria-labelledby="end-h">
+    <div class="panel-head"><div><h2 id="end-h">Monthly contracts ending soon</h2><p>Contracts that finish in the next 60 days, plus any that already ended but are still on the roster. Without a renewal these students roll off billing.</p></div></div>
+    <div class="tbl-wrap"><table id="endtbl"></table></div>
+  </section>
+
+  <section class="panel" aria-labelledby="mem-h">
+    <div class="panel-head">
+      <div><h2 id="mem-h">Monthly members billing now</h2><p id="memcount"></p></div>
+      <div class="tools">
+        <input type="search" id="q" placeholder="Search name or family" aria-label="Search members" value="${esc(ui.q)}">
+        <select id="prog" aria-label="Program">${["",...new Set(M.map(m=>m.program))].map(p=>`<option value="${esc(p)}"${p===ui.prog?" selected":""}>${p?esc(p):"All programs"}</option>`).join("")}</select>
+      </div>
+    </div>
+    <div class="tbl-wrap"><table id="memtbl"></table></div>
+  </section>
+  </div>`;
+
+  app.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{ui.month=+b.dataset.m;ui.day=null;app.querySelectorAll("[data-m]").forEach(x=>x.setAttribute("aria-pressed",x===b));renderCalendar(M,proj);});
+  app.querySelectorAll("[data-pif]").forEach(b=>b.onclick=()=>{ui.pifFilter=b.dataset.pif;app.querySelectorAll("[data-pif]").forEach(x=>x.setAttribute("aria-pressed",x===b));renderPIF(M);});
+  $("#q").oninput=e=>{ui.q=e.target.value;renderMembers(M);};
+  $("#prog").onchange=e=>{ui.prog=e.target.value;renderMembers(M);};
+
+  renderCalendar(M,proj); renderProjection(proj); renderPrograms(M); renderPlans(M); renderPIF(M); renderHold(M); renderEnding(M); renderMembers(M);
+}
+
+function renderCalendar(M,proj){
+  const p=proj[ui.month], y=p.y, mo=p.mo, days=monthDays(M,y,mo), total=days.reduce((a,d)=>a+d.amt,0);
+  const max=Math.max(...days.map(d=>d.amt),1);
+  const lvl=a=>!a?0:Math.max(1,Math.min(5,Math.ceil(a/max*5)));
+  const isCur=y===today.getFullYear()&&mo===today.getMonth();
+  const lead=new Date(y,mo,1).getDay();
+  let h='<div class="cal" role="grid" aria-label="'+MONTHS[mo]+' '+y+' billing by day">'+["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d=>`<div class="dow">${d}</div>`).join("");
+  for(let i=0;i<lead;i++) h+='<div class="day empty" aria-hidden="true"></div>';
+  days.forEach((d,i)=>{
+    const n=i+1, past=isCur&&n<today.getDate(), tod=isCur&&n===today.getDate();
+    h+=`<button class="day h${lvl(d.amt)}${past?" past":""}${tod?" today":""}" data-day="${n}" aria-pressed="${ui.day===n}" aria-label="${MONTHS[mo]} ${n}: ${d.amt?$f(d.amt)+" from "+d.list.length+" payments":"no payments"}">
+      <span class="d">${n}${tod?" · today":""}</span>${d.amt?`<span class="a">${$k(d.amt)}</span><span class="n">${d.list.length} pay</span>`:""}</button>`;
+  });
+  h+='</div><div class="legend-heat"><span>Less</span>'+[1,2,3,4,5].map(i=>`<i style="background:var(--heat-${i})"></i>`).join("")+'<span>More</span>'+(isCur?'<span style="margin-left:10px">Faded days have already passed</span>':"")+'</div>';
+  const wrap=$("#calwrap"); wrap.innerHTML=h;
+  wrap.querySelectorAll("[data-day]").forEach(b=>{
+    const n=+b.dataset.day, d=days[n-1];
+    b.onclick=()=>{ui.day=ui.day===n?null:n;wrap.querySelectorAll("[data-day]").forEach(x=>x.setAttribute("aria-pressed",+x.dataset.day===ui.day));renderFacts();};
+    b.onmouseenter=e=>{ if(!d.amt) return; showTip(`<b>${MONTHS[mo]} ${n}</b><div class="row"><span>${d.list.length} payments</span><b class="num">${$f(d.amt)}</b></div><div class="muted" style="margin-top:4px">Tap for names</div>`,e); };
+    b.onmousemove=moveTip; b.onmouseleave=hideTip;
+  });
+  function renderFacts(){
+    let cum=0,half=0; for(let i=0;i<days.length;i++){cum+=days[i].amt; if(!half&&cum>=total/2) half=i+1;}
+    const byWeek=[0,0,0,0,0]; days.forEach((d,i)=>byWeek[Math.min(4,Math.floor(i/7))]+=d.amt);
+    const done=isCur?days.slice(0,today.getDate()-1).reduce((a,d)=>a+d.amt,0):0;
+    const top=days.map((d,i)=>({n:i+1,a:d.amt})).sort((a,b)=>b.a-a.a).slice(0,3);
+    let f=`<div><div class="eyebrow">${MONTHS[mo]} total</div><div style="font-family:var(--display);font-weight:700;font-size:2rem;line-height:1.1" class="num">${$f(total)}</div></div>`;
+    if(isCur) f+=`<div><div class="progress" aria-hidden="true"><span style="width:${total?done/total*100:0}%;background:var(--s1)"></span></div><div class="fact" style="border:none;padding:6px 0 0"><span class="ink2">Should be in already</span><b>${$f(done)}</b></div><div class="fact"><span class="ink2">Still to come</span><b>${$f(total-done)}</b></div></div>`;
+    f+=`<div class="fact"><span class="ink2">Half the month's tuition is in by</span><b>the ${ord(half||1)}</b></div>`;
+    f+=`<div class="fact"><span class="ink2">Biggest draft days</span><b>${top.filter(t=>t.a).map(t=>ord(t.n)).join(", ")}</b></div>`;
+    f+=["1st–7th","8th–14th","15th–21st","22nd–28th","29th+"].map((l,i)=>byWeek[i]||i<4?`<div class="fact"><span class="ink2">${l}</span><b>${$f(byWeek[i])}</b></div>`:"").join("");
+    if(ui.day){ const d=days[ui.day-1]; f+=`<div class="daylist"><h3>${MONTHS[mo]} ${ui.day} · ${$f(d.amt)}</h3>${d.list.length?`<ul>${d.list.slice().sort((a,b)=>b.amount-a.amount).map(m=>`<li><span>${esc(m.name)} <span class="muted">· ${esc(m.plan)}</span></span><b class="num">${$f(m.amount)}</b></li>`).join("")}</ul>`:'<p class="muted" style="margin:0">No drafts on this day.</p>'}</div>`; }
+    $("#calfacts").innerHTML=f;
+  }
+  renderFacts();
+}
+
+function niceMax(v){ const p=Math.pow(10,Math.floor(Math.log10(v||1))); const n=v/p; return (n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10)*p; }
+function renderProjection(proj){
+  const W=680,H=260,L=58,R=12,T=26,B=34, iw=W-L-R, ih=H-T-B;
+  const max=niceMax(Math.max(...proj.map(p=>p.total))*1.05);
+  const ys=v=>T+ih-v/max*ih, bw=Math.min(64,iw/proj.length*0.56), step=iw/proj.length;
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Expected monthly billing for the next six months">`;
+  for(let i=0;i<=4;i++){ const v=max/4*i, y=ys(v); s+=`<line class="${i?"grid":"base"}" x1="${L}" x2="${W-R}" y1="${y}" y2="${y}"/><text x="${L-8}" y="${y+4}" text-anchor="end">${$k(v)}</text>`; }
+  proj.forEach((p,i)=>{
+    const cx=L+step*i+step/2, x=cx-bw/2, yT=ys(p.term), hT=ys(0)-yT, yM=ys(p.total), hM=Math.max(0,yT-yM-2);
+    s+=`<g class="pb" data-i="${i}"><rect x="${cx-step/2}" y="${T}" width="${step}" height="${ih}" fill="transparent"/>`;
+    s+=`<rect x="${x}" y="${yT}" width="${bw}" height="${hT}" fill="var(--s1)"/>`;
+    if(hM>0){ const r=Math.min(4,hM); s+=`<path d="M${x},${yT-2} v${-(hM-r)} q0,${-r} ${r},${-r} h${bw-2*r} q${r},0 ${r},${r} v${hM-r} z" fill="var(--s2)"/>`; }
+    s+=`<text class="lbl" x="${cx}" y="${yM-7}" text-anchor="middle">${$k(p.total)}</text>`;
+    s+=`<text x="${cx}" y="${H-12}" text-anchor="middle">${MONTHS[p.mo].slice(0,3)}</text></g>`;
+  });
+  s+="</svg>";
+  const el=$("#projchart"); el.innerHTML=s;
+  el.querySelectorAll(".pb").forEach(g=>{ const p=proj[+g.dataset.i];
+    g.onmouseenter=e=>showTip(`<b>${MONTHS[p.mo]} ${p.y}</b><div class="row"><span><i class="sw" style="background:var(--s1)"></i> Term contracts</span><b class="num">${$f(p.term)}</b></div><div class="row"><span><i class="sw" style="background:var(--s2)"></i> Month to month</span><b class="num">${$f(p.m2m)}</b></div><div class="row" style="border-top:1px solid var(--line);margin-top:4px;padding-top:4px"><span>Total</span><b class="num">${$f(p.total)}</b></div>${p.ending.length?`<div class="muted" style="margin-top:4px">${p.ending.length} contracts end this month</div>`:""}`,e);
+    g.onmousemove=moveTip; g.onmouseleave=hideTip; });
+}
+
+function renderPrograms(M){
+  const act=M.filter(m=>m.type==="monthly"&&st(m)==="active"&&(!m.end||pd(m.end)>=today));
+  const by={}; act.forEach(m=>{(by[m.program]??={amt:0,n:0}); by[m.program].amt+=m.amount; by[m.program].n++;});
+  const rows=Object.entries(by).sort((a,b)=>b[1].amt-a[1].amt), max=Math.max(...rows.map(r=>r[1].amt),1), tot=rows.reduce((a,r)=>a+r[1].amt,0);
+  const cols=["var(--s1)","var(--s2)","var(--s3)"];
+  $("#progbars").innerHTML=rows.map(([p,v],i)=>`<div class="pbar"><div class="top"><span><i class="sw" style="background:${cols[i]||"var(--muted)"}"></i> ${esc(p)} <span class="muted">· ${v.n} students</span></span><b class="num">${$f(v.amt)} <span class="muted" style="font-weight:400">${Math.round(v.amt/tot*100)}%</span></b></div><div class="track"><div class="fill" style="width:${v.amt/max*100}%;background:${cols[i]||"var(--muted)"}"></div></div></div>`).join("");
+  const card=act.filter(m=>m.method==="Card"), cardFee=card.reduce((a,m)=>a+m.amount-m.amount/1.03,0);
+  const noFee=act.filter(m=>m.method==="Card (no fee)"), absorbed=noFee.reduce((a,m)=>a+m.amount*0.03,0);
+  const disc=act.reduce((a,m)=>a+(m.discount||0),0);
+  $("#minis").innerHTML=`<div><b class="num">${$f(disc)}</b><span>Family discounts given per month</span></div><div><b class="num">${$f(cardFee)}</b><span>Card fees collected per month (${card.length} paying the 3%)</span></div><div><b class="num">${$f(absorbed)}</b><span>Card fees the school absorbs per month (${noFee.length} on card at the ACH rate, about ${$f(absorbed*12)} a year)</span></div>`;
+}
+
+function renderPlans(M){
+  const by={}; M.forEach(m=>{const k=m.plan+"|"+m.type; (by[k]??={plan:m.plan,type:m.type,n:0,amt:0,paid:0,rates:new Set()}); const b=by[k]; b.n++; b.amt+=m.amount||0; b.paid+=m.paid||0; if(m.type==="monthly") b.rates.add(m.rate||m.amount);});
+  const rows=Object.values(by).sort((a,b)=>a.type===b.type?b.n-a.n:a.type==="monthly"?-1:1);
+  $("#plantbl").innerHTML=`<thead><tr><th>Plan</th><th class="r">Members</th><th class="r">Monthly $</th><th class="r">PIF $</th><th class="r">Rates seen</th></tr></thead><tbody>${rows.map(r=>{const rs=[...r.rates].sort((a,b)=>a-b);return `<tr><td>${esc(r.plan)}${r.type==="pif"?' <span class="muted">· PIF</span>':""}</td><td class="r">${r.n}</td><td class="r">${r.amt?$f(r.amt):"—"}</td><td class="r">${r.paid?$f(r.paid):"—"}</td><td class="r">${rs.length?(rs.length>1?$f(rs[0])+"–"+$f(rs[rs.length-1]):$f(rs[0])):"—"}</td></tr>`}).join("")}</tbody>`;
+}
+
+function renderPIF(M){
+  const act=M.filter(m=>m.type==="pif"&&pifStatus(m,today).days>=0);
+  const pd$=act.reduce((a,m)=>a+(m.pifDiscount||0),0), fd$=act.reduce((a,m)=>a+(m.discount||0),0);
+  $("#pifminis").innerHTML=`<div><b class="num">${$f(act.reduce((a,m)=>a+m.paid,0))}</b><span>Prepaid by ${act.length} active PIF members</span></div><div><b class="num">${$f(pd$)}</b><span>PIF discounts given on active plans</span></div><div><b class="num">${$f(fd$)}</b><span>Family discounts on active PIF plans</span></div>`;
+  let rows=M.filter(m=>m.type==="pif").map(m=>({m,s:pifStatus(m,today)}));
+  if(ui.pifFilter==="renew") rows=rows.filter(r=>r.s.days>=0&&r.s.days<=60);
+  if(ui.pifFilter==="expired") rows=rows.filter(r=>r.s.days<0);
+  rows.sort((a,b)=>{const ea=a.s.days<0,eb=b.s.days<0; if(ea!==eb) return ea?1:-1; return ea?b.s.days-a.s.days:a.s.days-b.s.days;});
+  $("#piftbl").innerHTML=`<thead><tr><th>Student</th><th>Program</th><th>Plan</th><th class="r">Paid</th><th class="r">PIF disc.</th><th class="r">Family disc.</th><th>Paid on</th><th>Ends</th><th class="r">Days left</th><th>Status</th></tr></thead><tbody>${rows.length?rows.map(({m,s})=>`<tr><td>${esc(m.name)}</td><td>${esc(m.program)}</td><td>${esc(m.plan)}</td><td class="r">${$f(m.paid)}</td><td class="r">${m.pifDiscount?$f(m.pifDiscount):"—"}</td><td class="r">${m.discount?$f(m.discount):"—"}</td><td>${fmtD(m.paidDate)}</td><td>${fmtD(m.end)}</td><td class="r">${isFinite(s.days)?(s.days<0?Math.abs(s.days)+" ago":s.days):"—"}</td><td><span class="status ${s.cls}">${s.label}</span></td></tr>`).join(""):`<tr><td colspan="10" class="muted">No paid-in-full members match this filter.</td></tr>`}</tbody>`;
+}
+
+function renderHold(M){
+  const rows=M.filter(m=>m.type==="monthly"&&st(m)!=="active");
+  const order=["onbreak","paidahead","awaiting","paused","notpaying"];
+  rows.sort((a,b)=>order.indexOf(st(a))-order.indexOf(st(b))||a.name.localeCompare(b.name));
+  const cnt=k=>rows.filter(m=>st(m)===k).length;
+  const held=rows.filter(m=>["onbreak","paused"].includes(st(m))).reduce((a,m)=>a+(m.amount||0),0);
+  $("#holdminis").innerHTML=`<div><b class="num">${rows.length}</b><span>${cnt("onbreak")} on break · ${cnt("paidahead")} paid ahead · ${cnt("paused")} paused</span></div><div><b class="num">${cnt("awaiting")}</b><span>Awaiting renewal, follow up to get them back on billing</span></div><div><b class="num">${$f(held)}</b><span>Monthly tuition on hold from paused and on-break students</span></div>`;
+  const note=m=>{ const k=st(m); if(k==="onbreak") return m.resume?"Billing resumes "+fmtD(m.resume):"No resume date set"; if(k==="paidahead") return m.end?"Paid through "+fmtD(m.end):"Paid up"; if(k==="awaiting") return "Waiting on renewal"; if(k==="paused") return "Membership paused"; return "No tuition"; };
+  $("#holdtbl").innerHTML=`<thead><tr><th>Student</th><th>Program</th><th>Plan</th><th>Status</th><th class="r">Usual monthly</th><th>Note</th></tr></thead><tbody>${rows.length?rows.map(m=>`<tr><td>${esc(m.name)}</td><td>${esc(m.program)}</td><td>${esc(m.plan)}</td><td><span class="status ${STATUS[st(m)].cls}">${STATUS[st(m)].label}</span></td><td class="r">${m.amount?$f(m.amount):"—"}</td><td>${esc(note(m))}</td></tr>`).join(""):`<tr><td colspan="6" class="muted">Everyone on the roster is billing normally.</td></tr>`}</tbody>`;
+}
+
+function renderEnding(M){
+  const rows=M.filter(m=>m.type==="monthly"&&m.end&&["active","paidahead","onbreak"].includes(st(m))).map(m=>({m,d:daysBetween(today,pd(m.end))})).filter(r=>r.d<=60).sort((a,b)=>a.d-b.d);
+  $("#endtbl").innerHTML=`<thead><tr><th>Student</th><th>Program</th><th>Plan</th><th class="r">Monthly</th><th>Ends</th><th class="r">Days left</th><th>Status</th></tr></thead><tbody>${rows.length?rows.map(({m,d})=>`<tr><td>${esc(m.name)}</td><td>${esc(m.program)}</td><td>${esc(m.plan)}</td><td class="r">${m.amount?$f(m.amount):"—"}</td><td>${fmtD(m.end)}</td><td class="r">${d<0?Math.abs(d)+" ago":d}</td><td><span class="status ${d<0?"st-crit":d<=30?"st-crit":"st-warn"}">${d<0?"Already ended":d<=30?"Renew now":"Renew soon"}</span></td></tr>`).join("")+`<tr><td colspan="3"><b>Monthly billing at stake</b></td><td class="r"><b>${$f(rows.reduce((a,r)=>a+(r.m.amount||0),0))}</b></td><td colspan="3"></td></tr>`:`<tr><td colspan="7" class="muted">No contracts end in the next 60 days.</td></tr>`}</tbody>`;
+}
+
+function renderMembers(M){
+  const q=ui.q.trim().toLowerCase();
+  const rows=M.filter(m=>m.type==="monthly"&&st(m)==="active"&&(!m.end||pd(m.end)>=today)&&(!ui.prog||m.program===ui.prog)&&(!q||m.name.toLowerCase().includes(q)||(m.family||"").toLowerCase().includes(q))).sort((a,b)=>a.name.localeCompare(b.name));
+  $("#memcount").textContent=rows.length+" members · "+$f(rows.reduce((a,m)=>a+m.amount,0))+" per month";
+  $("#memtbl").innerHTML=`<thead><tr><th>Student</th><th>Program</th><th>Plan</th><th class="r">Monthly</th><th class="r">Family disc.</th><th>Method</th><th class="r">Bill day</th><th>Contract ends</th></tr></thead><tbody>${rows.map(m=>`<tr><td>${esc(m.name)}</td><td>${esc(m.program)}</td><td>${esc(m.plan)}</td><td class="r">${$f(m.amount)}</td><td class="r">${m.discount?$f(m.discount):"—"}</td><td>${esc(m.method||"—")}</td><td class="r">${m.billDay?ord(m.billDay):"—"}</td><td>${m.end?fmtD(m.end):"Month to month"}</td></tr>`).join("")||`<tr><td colspan="8" class="muted">No members match.</td></tr>`}</tbody>`;
+}
+
+function showState(title,body){ $("#app").innerHTML=`<div class="panel state"><h2>${title}</h2><p>${body}</p></div>`; }
+
+/* ===== updater ===== */
+let imp=null;
+$("#openUpdate").onclick=()=>{ $("#updater").hidden=false; $("#updater").scrollIntoView({behavior:"smooth",block:"start"}); };
+$("#closeUpdate").onclick=()=>{ $("#updater").hidden=true; };
+$("#copyCols").onclick=async()=>{ const t=$("#tplcols").textContent; try{ await navigator.clipboard.writeText(t); $("#copyCols").textContent="Copied"; }catch(e){ const r=document.createRange(); r.selectNodeContents($("#tplcols")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); $("#copyCols").textContent="Selected, press Ctrl+C"; } };
+const drop=$("#drop");
+drop.addEventListener("dragover",e=>{e.preventDefault();drop.classList.add("over");});
+drop.addEventListener("dragleave",()=>drop.classList.remove("over"));
+drop.addEventListener("drop",e=>{e.preventDefault();drop.classList.remove("over"); if(e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]);});
+$("#file").onchange=e=>{ if(e.target.files[0]) readFile(e.target.files[0]); };
+function readFile(file){
+  const fr=new FileReader(), isX=/\.xlsx?$/i.test(file.name);
+  $("#fileinfo").textContent="Reading "+file.name+"…";
+  fr.onload=()=>{
+    try{
+      let rows;
+      if(isX){ if(!window.XLSX) throw new Error("The Excel reader didn't load. Save the export as CSV and try again."); const wb=XLSX.read(fr.result,{type:"array",cellDates:true}); const ws=wb.Sheets[wb.SheetNames[0]]; rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:""}).filter(r=>r.some(x=>String(x).trim()!=="")); }
+      else rows=parseCSV(String(fr.result).replace(/^﻿/,""));
+      let hi=0; for(let i=0;i<Math.min(10,rows.length);i++){ if(rows[i].filter(x=>/[a-z]/i.test(String(x))).length>=2){hi=i;break;} }
+      const headers=rows[hi].map(h=>String(h).trim()); const body=rows.slice(hi+1);
+      if(!body.length) throw new Error("The file has headings but no member rows.");
+      imp={headers,body,map:autoMap(headers),name:file.name};
+      $("#fileinfo").textContent=file.name+" · "+body.length+" rows · "+headers.length+" columns";
+      buildMapUI();
+    }catch(err){ $("#fileinfo").textContent=err.message||"That file couldn't be read. Try saving it as CSV."; }
+  };
+  isX?fr.readAsArrayBuffer(file):fr.readAsText(file);
+}
+function buildMapUI(){
+  $("#mapping").hidden=false;
+  const opts=['<option value="-1">Not in file</option>',...imp.headers.map((h,i)=>`<option value="${i}">${esc(h||"(column "+(i+1)+")")}</option>`)].join("");
+  $("#mapgrid").innerHTML=FIELDS.map(f=>`<label for="map-${f.k}"><span class="${f.req?"req":""}">${f.label}</span><select id="map-${f.k}" data-k="${f.k}">${opts}</select></label>`).join("");
+  FIELDS.forEach(f=>{ const s=$("#map-"+f.k); s.value=String(imp.map[f.k]); s.onchange=()=>{imp.map[f.k]=+s.value;updatePreview();}; });
+  $("#addcard").onchange=updatePreview;
+  updatePreview();
+}
+function updatePreview(){
+  const mem=buildMembers(imp.body,imp.map,$("#addcard").checked); imp.members=mem;
+  const S=summarize(mem,today), mo=mem.filter(m=>m.type==="monthly"), noDay=mo.filter(m=>!m.billDay).length;
+  const warn=[];
+  if(!mem.length) warn.push("No student names found. Check the Student name column.");
+  if(noDay) warn.push(noDay+" monthly members have no billing day and won't appear on the calendar.");
+  if(mo.length&&!mo.some(m=>m.amount)) warn.push("No monthly amounts found. Check the Monthly amount column.");
+  $("#preview").innerHTML=`<b>${mem.length}</b> students found: <b>${mo.length}</b> monthly, <b>${mem.length-mo.length}</b> paid in full. Monthly billing <b>${$f(S.mrr)}</b>, ${MONTHS[today.getMonth()]} expected <b>${$f(S.total)}</b>.${warn.length?`<div class="msg err" style="margin-top:6px">${warn.map(esc).join("<br>")}</div>`:""}`;
+  $("#save").disabled=!mem.length;
+}
+$("#save").onclick=async()=>{
+  const msg=$("#savemsg"); if(!db){ msg.className="msg err"; msg.textContent="Saving works when the dashboard is opened on claude.ai."; return; }
+  $("#save").disabled=true; msg.className="msg"; msg.textContent="Saving…";
+  const asOf=iso(today), S=summarize(imp.members,today);
+  try{
+    await db.doc("roster/current").set({asOf,source:"upload",fileName:imp.name,uploadedAt:new Date().toISOString(),members:imp.members});
+    await db.doc("history/"+asOf).set({asOf,mrr:Math.round(S.mrr),monthly:S.monthlyCount,pif:S.pifCount,pifValue:Math.round(S.pifValue)});
+    msg.className="msg ok"; msg.textContent="Saved. The dashboard now shows "+imp.members.length+" members from "+imp.name+".";
+  }catch(e){
+    msg.className="msg err";
+    msg.textContent=e&&e.code==="invalid_argument"?"You don't have permission to update this dashboard, or the file is too large. Ask the dashboard owner to share it with you as an Editor.":"Couldn't save right now. Try again in a minute.";
+  }finally{ $("#save").disabled=false; }
+};
+
+/* ===== boot ===== */
+async function boot(){
+  let cl=window.claude;
+  for(let i=0;i<20&&!(cl&&cl.use);i++){ await new Promise(r=>setTimeout(r,100)); cl=window.claude; }
+  if(!cl||!cl.use){ showState("Open this dashboard on claude.ai","The member data loads when the page is opened from its claude.ai link."); return; }
+  const [d,u]=await Promise.all([cl.use("db"),cl.use("user")]);
+  db=d;
+  if(u){ canEdit=(await u.canEdit())||(await u.isOwner()); }
+  $("#openUpdate").hidden=!canEdit;
+  if(!db){ showState("Member data isn't available here","Open the dashboard from its claude.ai link to see the roster."); return; }
+  db.doc("roster/current").onSnapshot(s=>{
+    if(!s.exists){ roster=null; showState("No roster loaded yet",canEdit?"Use Update from MasterMind to load your first export.":"Ask Ulices to load the latest MasterMind export."); return; }
+    roster=s.data(); render();
+  },()=>showState("The roster couldn't load","Reload the page to try again."));
+  db.collection("history").onSnapshot(q=>{ history=q.docs.map(x=>x.data()); if(roster) render(); },()=>{});
+}
+boot();
+})();
+</script>
