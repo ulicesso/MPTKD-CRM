@@ -14,3 +14,4 @@ dist/
 screenshots/
 coverage/
 supabase/seed.sql
+dist-preview/
